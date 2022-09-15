@@ -29,27 +29,58 @@
                 </cfif>
             </li>
     </cffunction>
+    <cffunction name="nodeSort" output="true">
+        <cfargument name="folderId" type="numeric" />
+        <cfargument name="folderName" type="string" />
+        <cfargument name="nodeList" type="string" />
+
+        <!--- Check for any nodes that have *this* node as a parent --->
+        <cfquery name="LOCAL.qFindChildren" returnType="query">
+            select locationid, locationName
+            from coldfusion.tree
+            where parentLocationId = <cfqueryparam value="#arguments.folderId#" cfsqltype="cf_sql_varchar" />
+        </cfquery>
+
+        <cfset LOCAL.nodeList="">
+        <cfset listAppend(LOCAL.nodeList,arguments.nodeList)>
+        <cfset listAppend(LOCAL.nodeList,#arguments.folderName#)>
+        
+            <cfif LOCAL.qFindChildren.recordcount>
+                
+            <!--- We have children, so process these first --->
+            <cfloop query="LOCAL.qFindChildren">
+                <!--- Recursively call function --->
+                <cfset processTreeNode(folderId=LOCAL.qFindChildren.locationid, 
+                                        folderName=LOCAL.qFindChildren.locationName,
+                                        nodeList=LOCAL.nodelist) />
+            </cfloop>
+            <cfelse>
+                <cfreturn  LOCAL.nodeList>
+            <cfabort>                
+            </cfif>
+        </cffunction>
 
     <cffunction name="getDepth" output="true" access="remote">
-        <cfargument name="folderId" type="numeric" />                   
+        <cfargument name="folderId" type="numeric" />   
+        <cfargument name="level" type="string" />                  
             <!--- Check for any nodes that have *this* node as a parent --->
             <cfquery name="LOCAL.qFindChildren" returnType="query">
                 select locationid, locationName,parentLocationId
                 from coldfusion.tree
                 where parentLocationId = <cfqueryparam value="1" cfsqltype="cf_sql_varchar" />
             </cfquery>
-            <cfset local.level=1>     
+            <cfset local.depth=local.depth+arguments.level>     
             <cfif LOCAL.qFindChildren.recordcount>
                 <!--- We have another list! --->
-                        <cfif LOCAL.qFindChildren.locationid EQ #arguments.folderId#>                         
+                        <cfif LOCAL.qFindChildren.locationid EQ #arguments.folderId#>   
+                            <cfdump var=#local.depth#>                     
                             <cfabort>
                         </cfif> 
                     <!--- We have children, so process these first --->
                     <cfloop query="#LOCAL.qFindChildren#">
-                        <cfset local.level=local.level+1>
-                            <cfoutput>#local.level#<br></cfoutput>
+                        <cfset local.depth=local.depth+1>
                         <!--- Recursively call function --->
-                        <cfset getDepth(folderId=LOCAL.qFindChildren.locationid) />
+                        <cfset getDepth(folderId=LOCAL.qFindChildren.locationid,level=local.depth) />
                     </cfloop>
             </cfif>
     </cffunction>
