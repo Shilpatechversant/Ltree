@@ -17,12 +17,10 @@
                     <div class="res1" >
                         <h3>Task 2 - Sort List </h3>
                         <hr>
+                        <cfset local.dvalue=[]>
                         <table border="1" class="table table-bordered">
-                            <cfoutput query="ldata">
-                                <tr>
-                                <td> #locationName# </td>
-                                </tr>
-                            </cfoutput>
+                    
+                              <cfset data.nodeSort(folderId=1, folderName="Kerala",nodelist=local.dvalue) />
                         </table>
                     </div>
                     <hr>                                             
