@@ -40,7 +40,10 @@
               <cfset structClear(session.arrData)>
         <cfelse>
               <cfset Variables.MyList=#arguments.nodeList#>
-             
+        </cfif>
+        <cfif arguments.folderId EQ 10>
+                <cfset dataSet= arrayToList(#session.arrData#,",")>
+                <cfdump var=#dataSet# />
         </cfif>
         <!--- Check for any nodes that have *this* node as a parent --->
         <cfquery name="LOCAL.qFindChildren" returnType="query">
@@ -51,10 +54,7 @@
            
             <cfif LOCAL.qFindChildren.recordcount>
                <!--- We have children, so process these first --->
-                <cfif LOCAL.qFindChildren.LocationId EQ 10>
-                <cfset dataSet= arrayToList(#session.arrData#,",")>
-                    <cfdump var=#dataSet# />
-                </cfif>
+              
                 <cfif NOT structKeyExists(session,'arrData')>
                     <cfset session.arrData = arrayNew(1)/>
                 <cfelse>
@@ -125,20 +125,30 @@
                 select ParentlocationId, locationName,locationid
                 from coldfusion.tree
                 where locationid = <cfqueryparam value="#arguments.folderId#" cfsqltype="cf_sql_varchar" />
-            </cfquery>  
-            <h3>parent list </h3>
+            </cfquery>                   
 
             <cfif LOCAL.qFindParents.recordcount>
-                    <!--- We have another list! --->
-                    <ul>
                         <!--- We have children, so process these first --->
                         <cfloop query="#LOCAL.qFindParents#">
+                                <cfif #LOCAL.qFindParents.parentLocationId# EQ 0> 
+                                     <cfset dataSet= arrayToList(#session.arr1#,",")>
+                                     <h3> parent list </h3>
+                                        <cfdump var=#dataSet#>  
+                                        <cfset structClear(session)>            
+                                    <cfabort>
+                                 </cfif>  
+                              
+                               <cfif NOT structKeyExists(session,'arr1')>
+                                    <cfset session.arr1 = arrayNew(1)/>
+                                    <cfset arrayAppend(session.arr1,#LOCAL.qFindParents.parentLocationId#)>
+                                <cfelse>
+                                     <cfset arrayAppend(session.arr1,#LOCAL.qFindParents.parentLocationId#)>
+                                 </cfif>
                             
                             <!--- Recursively call function --->
-                            <cfset processPNode(folderId=LOCAL.qFindParents.parentLocationId) />
+                            <cfset getParents(folderId=LOCAL.qFindParents.parentLocationId) />
                         </cfloop>                     
-                        
-                    </ul>
+             
             </cfif>
     </cffunction>
 
