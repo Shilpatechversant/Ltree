@@ -27,7 +27,7 @@
                        <cfset structClear(session)>
                        <cfinvoke component="controllers.admin" method="lsort" returnvariable="sortList" pid="1"> 
                            <cfset sortResSet= arrayToList(#sortList#,",")>
-                           <h2><cfdump var=#sortResSet#></h2>
+                           <h4><cfdump var=#sortResSet#></h4>
                      </cfif>
                      <hr>
                     <form name="cftask_5" action=" " method="post">
@@ -64,7 +64,7 @@
                     </form>
                     <hr>
                     <cfif structKeyExists(form, "Getchild")>
-                       <ch3>Child List</h3>
+                       <h3>Child List</h3>
                        <cfset lid=#form.pid#>
                        <cfset childList=['']>
                        <cfset structClear(session)>
@@ -73,16 +73,24 @@
                            <h3><cfdump var=#childResSet#></h3>
                      </cfif>
               
-                    <form name="cftask_2" action="controllers/admin.cfc?method=getDepth" method="post">
+                    <form name="cftask_2" action=" " method="post">
                         <div class="form-group">
                             <label>Get Depth</label>
-                            <input type="text" name="folderId" required  autocomplete="off">
+                            <input type="text" name="check_id" required  autocomplete="off">
                         </div>
                         <div class="form-btn-control">
-                            <input type="submit" class="common-btn" name="submit" value="Getdepth" />
+                            <input type="submit" class="common-btn" name="Getdepth" value="Getdepth" />
                         </div>
                     </form>
-                
+
+                    <cfif structKeyExists(form, "Getdepth")>
+                       <h3>Level Of the Node</h3>
+                       <cfset cid=#check_id#>
+                       <cfset levelList=''>
+                       <cfset structClear(session)>
+                       <cfinvoke component="controllers.admin" method="getDepth" returnvariable="levelList" pid="#form.check_id#"> 
+                         <h3><cfdump var=#levelList#></h3>
+                     </cfif>
                 </div>
             </div>
         </section>

@@ -30,69 +30,53 @@
                 </cfif>
             </li>
     </cffunction>
-    <cffunction name="nodeSort" output="true">
-        <cfargument name="folderId" type="numeric"  default="0"/>
-        <cfargument name="folderName" type="string" />
-        <cfargument name="nodeList" type="array"/>
-        <!--- Define the Variable scope. ---> 
-        <cfif arguments.folderId EQ 0>
-              <cfset Variables.MyList = ''>
-              <cfset structClear(session.arrData)>
-        <cfelse>
-              <cfset Variables.MyList=#arguments.nodeList#>
-        </cfif>
-        <cfif arguments.folderId EQ 10>
-                <cfset dataSet= arrayToList(#session.arrData#,",")>
-                <cfdump var=#dataSet# />
-        </cfif>
-        <!--- Check for any nodes that have *this* node as a parent --->
-        <cfquery name="LOCAL.qFindChildren" returnType="query">
-            select locationid, locationName,parentLocationId 
-            from coldfusion.tree
-            where parentLocationId = <cfqueryparam value="#arguments.folderId#" cfsqltype="cf_sql_varchar" />
-        </cfquery> 
-           
-            <cfif LOCAL.qFindChildren.recordcount>
-               <!--- We have children, so process these first --->
-              
-                <cfif NOT structKeyExists(session,'arrData')>
-                    <cfset session.arrData = arrayNew(1)/>
-                <cfelse>
-                <cfset arrayAppend(session.arrData,#LOCAL.qFindChildren.locationName#)>
-                </cfif>
-                <cfloop query="LOCAL.qFindChildren">
-                    <!--- Recursively call function --->
-                    <cfset nodeSort(folderId=LOCAL.qFindChildren.locationid, 
-                                    folderName=LOCAL.qFindChildren.locationName,
-                                    nodeList=#Variables.MyList#) />
-                </cfloop>
-            <cfelse>           
-            </cfif>
-    </cffunction>
+  
 
     <cffunction name="getDepth" output="true" access="remote">
-        <cfargument name="folderId" type="numeric" />   
-        <cfargument name="level" type="string" default="0"/>                  
+        <cfargument name="pid" type="numeric" /> 
+        <cfargument name="checknode" type="numeric" default="0"/>  
             <!--- Check for any nodes that have *this* node as a parent --->
+        <cfif NOT structKeyExists(session,'depth')>
+                 <cfset session.depth = 1/>
             <cfquery name="LOCAL.qFindChildren" returnType="query">
                 select locationid, locationName,parentLocationId
                 from coldfusion.tree
                 where parentLocationId = <cfqueryparam value="1" cfsqltype="cf_sql_varchar" />
+                ORDER BY locationName ASC
             </cfquery>
-               
+        <cfelse>
+             <cfquery name="LOCAL.qFindChildren" returnType="query">
+                select locationid, locationName,parentLocationId
+                from coldfusion.tree
+                where parentLocationId = <cfqueryparam value="#arguments.pid#" cfsqltype="cf_sql_varchar" />
+                ORDER BY locationName ASC
+            </cfquery>
+        </cfif>
+        <cfif NOT structKeyExists(session,'checknode')>
+             <cfset session.checknode= #arguments.pid#>
+        </cfif>
             <cfif LOCAL.qFindChildren.recordcount>
-                <!--- We have another list! --->
-                        <cfif LOCAL.qFindChildren.locationid EQ #arguments.folderId#>   
-                            <cfdump var=#arguments.level#>                     
-                            <cfabort>
-                        </cfif> 
-                    <!--- We have children, so process these first --->
-                    <cfloop query="#LOCAL.qFindChildren#">
-                        <cfset arguments.level=arguments.level+1>
-                        <!--- Recursively call function --->
-                        <cfset getDepth(folderId=LOCAL.qFindChildren.locationid,level=arguments.level) />
-                    </cfloop>
+                <!--- We have children, so process these first --->
+                <cfloop query="#LOCAL.qFindChildren#">
+                    <cfif LOCAL.qFindChildren.locationid EQ #session.checknode#>   
+                            <cfset session.flevel = #session.depth# +1/>
+                            <cfreturn session.flevel/>                  
+                        <cfabort>
+                    </cfif> 
+                        <cfif NOT structKeyExists(session,'depth')>
+                            <cfset session.depth = 1/>
+                        <cfelse>
+                            <cfset session.depth =session.depth+1>
+                        </cfif>
+                    <!--- Recursively call function --->
+                    <cfset getDepth(pid=LOCAL.qFindChildren.locationid) />
+                </cfloop>
+                    <cfset session.depth =1>
             </cfif>
+            <cfif structKeyExists(session,'flevel') >
+                <cfreturn session.flevel/>
+                <cfabort>
+           </cfif>
     </cffunction>
 
     <cffunction name="processPNode" output="true">
@@ -180,7 +164,6 @@
                             <!--- Recursively call function --->
                             <cfset getChild(pid=LOCAL.qFParents.locationid) />
                         </cfloop>
-                    
                 </cfif> 
                 <cfif structKeyExists(session,'arr1') >
                     <cfreturn session.arr1/>
@@ -189,7 +172,7 @@
     </cffunction>
 
         <cffunction name="lsort" output="true" access="remote">
-        <cfargument name="pid" type="string"/>
+             <cfargument name="pid" type="string"/>
             <!--- Check for any nodes that have *this* node as a parent --->
             <cfquery name="LOCAL.qFParents" returnType="query">
                 select ParentlocationId, locationName,locationid
