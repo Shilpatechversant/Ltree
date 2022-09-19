@@ -24,7 +24,7 @@
                         </table>
                     </div>
                     <hr>                                             
-                    <form name="cftask_5" action="controllers/admin.cfc?method=getParents" method="post">
+                    <form name="cftask_5" action=" " method="post">
                         <div class="form-group">
                             <label>Get Parent Ids</label>
                             <input type="text" name="folderId" required  autocomplete="off">
@@ -35,11 +35,21 @@
                         </div>
                     </form>
                     <hr>
-
+                    <cfif structKeyExists(form, "Submit")>
+                       <ch3>Parent List</h3>
+                       <cfset lid=#form.folderId#>
+                       <cfset parentList=['']>
+                       <cfset structClear(session)>
+                       <cfinvoke component="controllers.admin" method="getParents" returnvariable="parentList" folderId="#form.folderId#"> 
+                           <cfset resSet= arrayToList(#parentList#,",")>
+                           <h3> <cfdump var=#resSet#></h3>
+                     </cfif>
+                     <hr>
+                     
                     <form name="cftask_4" action="controllers/admin.cfc?method=getChild" method="post">
                         <div class="form-group">
                             <label>Get child Ids</label>
-                            <input type="text" name="folderId" required  autocomplete="off">
+                            <input type="text" name="folderIfd" required  autocomplete="off">
                         </div>
                      
                         <div class="form-btn-control">
